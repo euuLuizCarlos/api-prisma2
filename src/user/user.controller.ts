@@ -27,4 +27,15 @@ export class UserController {
   findOne(@Param('id') id: number) {
     return this.userService.findOne(+id);
   }
+
+  @Post(':id/favorites')
+  addFavorite(@Param('id') id: number, @Body() body: {postId: number}) {
+    return this.userService.addFavorite(+id, body.postId);
+  }
+
+  @Get(':id/favorites')
+  getFavorites(@Param('id') id: number) {
+    return this.userService.getFavorites(+id);
+  }
+  
 }

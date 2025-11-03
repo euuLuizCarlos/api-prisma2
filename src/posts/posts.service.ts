@@ -8,7 +8,8 @@ import { Post } from './entities/post.entity';
 @Injectable()
 export class PostsService {
   constructor(private prisma: PrismaService) {} // <- injeção de dependência
-
+  
+  
   // posts.service.ts
 async create(title: string, content: string, publishedAt: Date, authorId: number) {
   return this.prisma.post.create({
@@ -42,4 +43,6 @@ async create(title: string, content: string, publishedAt: Date, authorId: number
   remove(id: number) {
     return `This action removes a #${id} post`;
   }
+
+  
 }

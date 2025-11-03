@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { HttpException, Injectable } from '@nestjs/common';
 import { CreateAuthorDto } from './dto/create-author.dto';
 import { UpdateAuthorDto } from './dto/update-author.dto';
 import { PrismaService } from 'src/prisma/prisma.service';
@@ -9,6 +9,10 @@ export class AuthorsService {
     constructor(private prisma: PrismaService) {}
   
   async create(userId: number, bio: string) {
+    const author = await this.prisma.author.findUnique({ where: { userId } });
+    if (author) {
+      throw new HttpException(`AUTHOR_ALREADY_EXISTS`, 400);
+    }
     return this.prisma.author.create({
       data: {userId, bio},
     });
