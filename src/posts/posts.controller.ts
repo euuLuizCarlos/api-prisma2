@@ -5,11 +5,13 @@ import { UpdatePostDto } from './dto/update-post.dto';
 
 @Controller('posts')
 export class PostsController {
-  constructor(private readonly postsService: PostsService) {}
+  constructor(private readonly postsService: PostsService) { }
+
+
 
   @Post()
-  create(@Body() createPostDto: CreatePostDto) {
-    return this.postsService.create(createPostDto);
+  create(@Body() body: { title: string; content: string; publishedAt: Date; authorId: number }) {
+    return this.postsService.create(body.title, body.content, body.publishedAt, body.authorId);
   }
 
   @Get()

@@ -18,13 +18,13 @@ export class UserController {
   }
 
   @Put(':id')
-  async update(@Param('id') id: string, 
+  async update(@Param('id') id: number, 
   @Body() updateUserDto: UpdateUserDto) {
     return this.userService.update(+id, updateUserDto);
   }
 
   @Get(':id')
-  findOne(@Param('id') id: string) {
+  findOne(@Param('id') id: number) {
     return this.userService.findOne(+id);
   }
 }
