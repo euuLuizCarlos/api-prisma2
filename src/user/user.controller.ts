@@ -1,6 +1,5 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, Put } from '@nestjs/common';
+import { Controller, Get, Post, Body, Param, Put, Delete } from '@nestjs/common';
 import { UserService } from './user.service';
-import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 
 @Controller('user')
@@ -18,23 +17,28 @@ export class UserController {
   }
 
   @Put(':id')
-  async update(@Param('id') id: number, 
+  async update(@Param('id') id: string,
   @Body() updateUserDto: UpdateUserDto) {
     return this.userService.update(+id, updateUserDto);
   }
 
   @Get(':id')
-  findOne(@Param('id') id: number) {
+  findOne(@Param('id') id: string) {
     return this.userService.findOne(+id);
+  }
+  
+  @Delete(':id')
+  remove(@Param('id') id: string) {
+    return this.userService.remove(+id);
   }
 
   @Post(':id/favorites')
-  addFavorite(@Param('id') id: number, @Body() body: {postId: number}) {
+  addFavorite(@Param('id') id: string, @Body() body: {postId: number}) {
     return this.userService.addFavorite(+id, body.postId);
   }
 
   @Get(':id/favorites')
-  getFavorites(@Param('id') id: number) {
+  getFavorites(@Param('id') id: string) {
     return this.userService.getFavorites(+id);
   }
   

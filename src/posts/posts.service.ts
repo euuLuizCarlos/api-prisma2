@@ -1,48 +1,67 @@
-import { Injectable } from '@nestjs/common';
-import { CreatePostDto } from './dto/create-post.dto';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { UpdatePostDto } from './dto/update-post.dto';
 import { PrismaService } from 'src/prisma/prisma.service';
-import { Post } from './entities/post.entity';
-
+import { Post } from '@prisma/client'; 
 
 @Injectable()
 export class PostsService {
-  constructor(private prisma: PrismaService) {} // <- injeção de dependência
+  constructor(private prisma: PrismaService) {} 
   
-  
-  // posts.service.ts
-async create(title: string, content: string, publishedAt: Date, authorId: number) {
-  return this.prisma.post.create({
-    data: {
-      title,
-      content,
-      publishedAt,
-      author: { connect: { id: authorId } },
-    },
-  });
-}
-
-  findAll(): Promise<Post> {
-    return this.prisma.post.findMany();
+  async create(data: { title: string; content: string; authorId: number }): Promise<Post> {
+    return this.prisma.post.create({
+      data: {
+        title: data.title,
+        content: data.content,
+        authorId: data.authorId,
+      },
+    });
   }
 
-  findOne(id: number) {
-    return `This action returns a #${id} post`;
-  }
+  async findAll(authorId?: string, date?: string): Promise<Post[]> {
+    const where: any = {};
 
-  async update(id: number, data: UpdatePostDto) {
-    if (!id) {
-      throw new Error(`Não há author com o ${id} (${id} not found`);
+    if (authorId) {
+      where.authorId = Number(authorId);
     }
+
+    if (date) {
+      const targetDate = new Date(date);
+      
+      if (!isNaN(targetDate.getTime())) {
+          where.publishedAt = {
+              gte: targetDate, 
+              lt: new Date(targetDate.getTime() + 24 * 60 * 60 * 1000), 
+          };
+      }
+    }
+
+    return this.prisma.post.findMany({
+      where,
+      include: { author: true },
+    });
+  }
+
+  async findOne(id: number): Promise<Post> {
+    const post = await this.prisma.post.findUnique({ where: { id } });
+    if (!post) {
+      throw new NotFoundException(`O Post com ID ${id} não foi encontrado.`);
+    }
+    return post;
+  }
+
+  async update(id: number, data: UpdatePostDto): Promise<Post> {
+    await this.findOne(id);
+    
     return this.prisma.post.update({
       where: { id },
       data,
     });
   }
 
-  remove(id: number) {
-    return `This action removes a #${id} post`;
+  async remove(id: number) {
+    await this.findOne(id);
+    
+    await this.prisma.post.delete({ where: { id } });
+    return { message: `Post com ID ${id} removido com sucesso.` };
   }
-
-  
 }

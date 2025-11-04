@@ -1,47 +1,47 @@
-import { HttpException, Injectable } from '@nestjs/common';
-import { CreateAuthorDto } from './dto/create-author.dto';
+import { HttpException, Injectable, NotFoundException } from '@nestjs/common'; 
 import { UpdateAuthorDto } from './dto/update-author.dto';
 import { PrismaService } from 'src/prisma/prisma.service';
-import { Author } from './entities/author.entity';
+import { Author } from '@prisma/client';
 
 @Injectable()
 export class AuthorsService {
     constructor(private prisma: PrismaService) {}
   
-  async create(userId: number, bio: string) {
+  async create(userId: number, bio: string): Promise<Author> {
     const author = await this.prisma.author.findUnique({ where: { userId } });
     if (author) {
-      throw new HttpException(`AUTHOR_ALREADY_EXISTS`, 400);
+      throw new HttpException(`AUTHOR_ALREADY_EXISTS: Usuário já possui um perfil de autor.`, 400);
     }
     return this.prisma.author.create({
       data: {userId, bio},
     });
   }
-
   
-findAll(): Promise<Author[]> {
+  findAll(): Promise<Author[]> {
       return this.prisma.author.findMany();
     }
   
-
-  findOne(id: number) {
-    if (!id) {
-      throw new Error(`Não há author com o ${id} (${id} not found`);
+  async findOne(id: number): Promise<Author> {
+    const author = await this.prisma.author.findUnique({ where: { id } });
+    if (!author) {
+      throw new NotFoundException(`O Author com ID ${id} não foi encontrado.`);
     }
-    return this.prisma.author.findUnique({ where: { id } }) ;
+    return author;
   }
 
-  update(id: number, data:{bio?: string}){
-    if (!id) {
-      throw new Error(`Não há author com o ${id} (${id} not found`);
-    }
+  async update(id: number, data:{bio?: string}): Promise<Author> {
+    await this.findOne(id); 
+
     return this.prisma.author.update({
       where: { id },
       data,
     });
   }
 
-  remove(id: number) {
-    return `This action removes a #${id} author`;
+  async remove(id: number) {
+    await this.findOne(id); 
+
+    await this.prisma.author.delete({ where: { id } });
+    return { message: `Author com ID ${id} removido com sucesso.` };
   }
 }

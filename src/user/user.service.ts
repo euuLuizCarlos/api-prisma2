@@ -1,16 +1,18 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
-import { CreateUserDto } from './dto/create-user.dto';
+// src/user/user.service.ts
+
+import { Injectable, NotFoundException } from '@nestjs/common'; 
+import { CreateUserDto } from './dto/create-user.dto'; 
 import { UpdateUserDto } from './dto/update-user.dto';
 
 import { PrismaService } from '../prisma/prisma.service';
-import { User } from './entities/user.entity';
+import { User } from '@prisma/client';
 
 @Injectable()
 export class UserService {
 
   constructor(private prisma: PrismaService) { }
 
-  async create(name: string, email: string) {
+  async create(name: string, email: string): Promise<User> {
     return this.prisma.user.create({
       data: { name, email },
     });
@@ -20,20 +22,27 @@ export class UserService {
     return this.prisma.user.findMany();
   }
 
-  findOne(id: number) {
-    if (!id) {
-      throw new NotFoundException(`O Usuário ${id} não existe (the user ${id} not found`);
+  async findOne(id: number): Promise<User> {
+    const user = await this.prisma.user.findUnique({ where: { id } });
+    if (!user) {
+      throw new NotFoundException(`O Usuário com ID ${id} não existe.`);
     }
-    return this.prisma.user.findUnique({ where: { id } });
+    return user;
   }
 
-  update(id: number, data: { name?: string; email?: string }) {
-    if (!id) {
-      throw new NotFoundException(`O Usuário ${id} não existe (the user ${id} not found`);
-    }
-    return this.prisma.user.update({ where: { id }, data, });
+  async update(id: number, data: { name?: string; email?: string }): Promise<User> {
+    await this.findOne(id); 
+    
+    return this.prisma.user.update({ where: { id }, data });
   }
-async addFavorite(userId: number, postId: number) {
+
+  async remove(id: number) {
+    await this.findOne(id); 
+    await this.prisma.user.delete({ where: { id } });
+    return { message: `Usuário com ID ${id} removido com sucesso.` };
+  }
+
+  async addFavorite(userId: number, postId: number) {
   return this.prisma.favorite.create({
     data: { userId, postId },
   });
